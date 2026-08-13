@@ -19,11 +19,13 @@ const selectClass =
 
 export function JobAddForm({
   defaultScheduledAt,
+  defaultCustomerId,
   customers,
   action,
   onDone,
 }: {
   defaultScheduledAt: string;
+  defaultCustomerId?: string;
   customers: CustomerOption[];
   action: (values: AddJobFormValues) => Promise<Result>;
   onDone: () => void;
@@ -32,8 +34,9 @@ export function JobAddForm({
   const form = useForm<FormValues, unknown, AddJobFormValues>({
     resolver: zodResolver(addJobFormSchema),
     defaultValues: {
-      customerMode: "new",
-      customerId: "",
+      // Z karty klienta zaczynamy od trybu „z bazy" z podpiętym klientem.
+      customerMode: defaultCustomerId ? "existing" : "new",
+      customerId: defaultCustomerId ?? "",
       newCustomerName: "",
       newCustomerPhone: "",
       title: "",

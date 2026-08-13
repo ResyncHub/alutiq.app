@@ -2,9 +2,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, MapPin, Phone, Mail } from "lucide-react";
 import { customerKindLabel } from "@/lib/domain/dictionaries";
-import { getCustomer } from "@/lib/db/customers";
+import { getCustomer, listCustomerOptions } from "@/lib/db/customers";
 import { listSitesForCustomer } from "@/lib/db/sites";
 import { listDevicesForCustomer, type Device } from "@/lib/db/devices";
+import { listJobsForCustomer } from "@/lib/db/jobs";
+import { JobListItem } from "../../zlecenia/job-list-item";
+import { JobQuickAdd } from "../../zlecenia/job-quick-add";
 import { CustomerActions } from "./customer-actions";
 import { SiteQuickAdd } from "./site-quick-add";
 import { SiteActions } from "./site-actions";
@@ -22,9 +25,11 @@ export default async function CustomerDetailPage({
   const customer = await getCustomer(id);
   if (!customer) notFound();
 
-  const [sites, devices] = await Promise.all([
+  const [sites, devices, jobs, customerOptions] = await Promise.all([
     listSitesForCustomer(id),
     listDevicesForCustomer(id),
+    listJobsForCustomer(id),
+    listCustomerOptions(),
   ]);
 
   const devicesBySite = new Map<string, Device[]>();
@@ -83,6 +88,35 @@ export default async function CustomerDetailPage({
           {customer.notes}
         </p>
       ) : null}
+
+      <section className="mb-8">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="text-sm font-semibold uppercase tracking-wide text-muted">
+            Zlecenia {jobs.length > 0 ? `(${jobs.length})` : ""}
+          </h2>
+          <JobQuickAdd
+            customers={customerOptions}
+            defaultCustomerId={customer.id}
+            triggerLabel="Dodaj"
+            variant="outline"
+            className="px-3"
+          />
+        </div>
+
+        {jobs.length === 0 ? (
+          <div className="rounded-app border border-dashed border-border bg-surface/50 px-4 py-8 text-center text-sm text-muted">
+            Brak zleceń dla tego klienta.
+          </div>
+        ) : (
+          <ul className="flex flex-col gap-2">
+            {jobs.map((job) => (
+              <li key={job.id}>
+                <JobListItem job={job} />
+              </li>
+            ))}
+          </ul>
+        )}
+      </section>
 
       <section>
         <div className="mb-3 flex items-center justify-between">

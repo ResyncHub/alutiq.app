@@ -12,12 +12,14 @@ import type { CustomerOption } from "./job-form";
 export function JobQuickAdd({
   customers,
   defaultScheduledAt = "",
+  defaultCustomerId,
   triggerLabel = "Dodaj zlecenie",
   variant = "primary",
   className,
 }: {
   customers: CustomerOption[];
   defaultScheduledAt?: string;
+  defaultCustomerId?: string;
   triggerLabel?: string;
   variant?: "primary" | "outline";
   className?: string;
@@ -35,6 +37,7 @@ export function JobQuickAdd({
       <Sheet open={open} onClose={() => setOpen(false)} title="Nowe zlecenie">
         <JobAddForm
           defaultScheduledAt={defaultScheduledAt}
+          defaultCustomerId={defaultCustomerId}
           customers={customers}
           action={(values) => addJobAction(values)}
           onDone={() => {
