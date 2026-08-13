@@ -10,6 +10,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: projectRoot,
   },
+  // Next 16 przy `next dev` dopisuje własny blok do CLAUDE.md — wyłączamy,
+  // bo nasz CLAUDE.md jest ręcznie utrzymywanym źródłem zasad projektu.
+  agentRules: false,
 };
 
 export default nextConfig;
