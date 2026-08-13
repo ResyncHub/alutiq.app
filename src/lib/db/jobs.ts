@@ -75,6 +75,24 @@ export async function getJobStatusCounts(): Promise<{
   return { total: data?.length ?? 0, byStatus };
 }
 
+/** Zlecenia do wyboru (id + etykieta) — do podpięcia wydatku/wpłaty. */
+export async function listJobOptions(): Promise<{ id: string; label: string }[]> {
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("job")
+    .select("id, title, customer:customer_id(name, phone)")
+    .is("deleted_at", null)
+    .order("created_at", { ascending: false })
+    .returns<
+      { id: string; title: string | null; customer: { name: string | null; phone: string | null } | null }[]
+    >();
+  if (error) throw new Error(`Nie udało się pobrać zleceń: ${error.message}`);
+  return (data ?? []).map((j) => ({
+    id: j.id,
+    label: j.title || j.customer?.name || j.customer?.phone || "Zlecenie",
+  }));
+}
+
 /** Zlecenia bez ustalonego terminu. */
 export async function listUnscheduledJobs(): Promise<JobWithCustomer[]> {
   const supabase = await createClient();

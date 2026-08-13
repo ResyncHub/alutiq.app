@@ -80,3 +80,23 @@ export const JOB_STATUS_CLASSES: Record<JobStatus, string> = {
 export function jobStatusLabel(value: string): string {
   return (JOB_STATUS_LABELS as Record<string, string>)[value] ?? value;
 }
+
+// Kategorie wydatków — wartości zgodne z CHECK w migracji.
+export const EXPENSE_CATEGORIES = [
+  "material_parts",
+  "fuel_travel",
+  "tools",
+  "other",
+] as const;
+export type ExpenseCategory = (typeof EXPENSE_CATEGORIES)[number];
+
+export const EXPENSE_CATEGORY_LABELS: Record<ExpenseCategory, string> = {
+  material_parts: "Materiały / części",
+  fuel_travel: "Paliwo / dojazd",
+  tools: "Narzędzia i sprzęt",
+  other: "Inne",
+};
+
+export function expenseCategoryLabel(value: string): string {
+  return (EXPENSE_CATEGORY_LABELS as Record<string, string>)[value] ?? value;
+}

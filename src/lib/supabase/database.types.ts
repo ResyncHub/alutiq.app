@@ -109,6 +109,62 @@ export type Database = {
           },
         ]
       }
+      expense: {
+        Row: {
+          category: string
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          gross_gr: number
+          id: string
+          job_id: string | null
+          net_gr: number
+          spent_on: string
+          updated_at: string
+          user_id: string
+          vat_gr: number
+          vat_rate: number
+        }
+        Insert: {
+          category?: string
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          gross_gr: number
+          id?: string
+          job_id?: string | null
+          net_gr: number
+          spent_on?: string
+          updated_at?: string
+          user_id?: string
+          vat_gr?: number
+          vat_rate?: number
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          gross_gr?: number
+          id?: string
+          job_id?: string | null
+          net_gr?: number
+          spent_on?: string
+          updated_at?: string
+          user_id?: string
+          vat_gr?: number
+          vat_rate?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "expense_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job: {
         Row: {
           address: string | null
@@ -168,6 +224,50 @@ export type Database = {
             columns: ["site_id"]
             isOneToOne: false
             referencedRelation: "site"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment: {
+        Row: {
+          amount_gr: number
+          created_at: string
+          deleted_at: string | null
+          description: string | null
+          id: string
+          job_id: string | null
+          paid_on: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          amount_gr: number
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          job_id?: string | null
+          paid_on?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          amount_gr?: number
+          created_at?: string
+          deleted_at?: string | null
+          description?: string | null
+          id?: string
+          job_id?: string | null
+          paid_on?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job"
             referencedColumns: ["id"]
           },
         ]
