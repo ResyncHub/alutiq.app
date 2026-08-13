@@ -1,45 +1,11 @@
 import { z } from "zod";
 import { CUSTOMER_KINDS, DEVICE_TYPES } from "@/lib/domain/dictionaries";
+import { optionalDate, optionalEmail, optionalText } from "./common";
 
 /**
  * Schematy walidacji dla domeny klientów — jedno źródło prawdy dla formularzy
- * i Server Actions (CLAUDE.md §5). Puste pola tekstowe zamieniamy na null,
- * żeby w bazie nie lądowały puste stringi.
+ * i Server Actions (CLAUDE.md §5). Pomocniki pól opcjonalnych w ./common.
  */
-
-// Pola opcjonalne akceptują string, null i undefined (nullish), a na wyjściu
-// dają zawsze `string | null`. Dzięki temu schemat jest idempotentny — można
-// nim bezpiecznie ponownie sparsować własny wynik (formularz -> Server Action).
-
-/** Pole tekstowe opcjonalne: "" / null / brak -> null, przycina białe znaki. */
-const optionalText = (max = 500) =>
-  z
-    .string()
-    .trim()
-    .max(max, `Maksymalnie ${max} znaków`)
-    .nullish()
-    .transform((v) => (v && v.length > 0 ? v : null));
-
-/** Opcjonalny e-mail: pusty -> null, w innym razie musi być poprawny. */
-const optionalEmail = z
-  .string()
-  .trim()
-  .max(320)
-  .nullish()
-  .transform((v) => (v && v.length > 0 ? v : null))
-  .refine((v) => v === null || z.string().email().safeParse(v).success, {
-    message: "Nieprawidłowy e-mail",
-  });
-
-/** Opcjonalna data kalendarzowa "YYYY-MM-DD". */
-const optionalDate = z
-  .string()
-  .trim()
-  .nullish()
-  .transform((v) => (v && v.length > 0 ? v : null))
-  .refine((v) => v === null || /^\d{4}-\d{2}-\d{2}$/.test(v), {
-    message: "Data w formacie RRRR-MM-DD",
-  });
 
 // ---------------------------------------------------------------------------
 // customer

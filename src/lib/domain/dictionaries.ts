@@ -43,3 +43,40 @@ export function deviceTypeLabel(value: string): string {
 export function customerKindLabel(value: string): string {
   return (CUSTOMER_KIND_LABELS as Record<string, string>)[value] ?? value;
 }
+
+// Statusy zleceń — wartości muszą zgadzać się z CHECK w migracji (CLAUDE.md §3).
+export const JOB_STATUSES = [
+  "new",
+  "scheduled",
+  "in_progress",
+  "waiting_parts",
+  "done",
+  "settled",
+  "cancelled",
+] as const;
+export type JobStatus = (typeof JOB_STATUSES)[number];
+
+export const JOB_STATUS_LABELS: Record<JobStatus, string> = {
+  new: "Nowe",
+  scheduled: "Zaplanowane",
+  in_progress: "W toku",
+  waiting_parts: "Czeka na części",
+  done: "Zrobione",
+  settled: "Rozliczone",
+  cancelled: "Anulowane",
+};
+
+/** Klasy Tailwind koloru statusu (tło + tekst), spójne z motywem. */
+export const JOB_STATUS_CLASSES: Record<JobStatus, string> = {
+  new: "bg-surface-2 text-muted",
+  scheduled: "bg-accent/15 text-accent",
+  in_progress: "bg-accent/15 text-accent",
+  waiting_parts: "bg-warning/15 text-warning",
+  done: "bg-success/15 text-success",
+  settled: "bg-success/15 text-success",
+  cancelled: "bg-danger/15 text-danger",
+};
+
+export function jobStatusLabel(value: string): string {
+  return (JOB_STATUS_LABELS as Record<string, string>)[value] ?? value;
+}

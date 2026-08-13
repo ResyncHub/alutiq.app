@@ -54,8 +54,8 @@ Słownik domenowy — trzymaj się go, nie wymyślaj synonimów:
 | klient | `customer` | osoba lub firma |
 | obiekt / adres | `site` | miejsce robót; klient może mieć kilka |
 | urządzenie | `device` | brama, napęd, okno, drzwi — z numerem seryjnym i gwarancją |
-| zlecenie | `job` | jednostka pracy, do której podpięte są wizyty, zdjęcia, koszty |
-| wizyta | `visit` | konkretny termin w kalendarzu, powiązany ze zleceniem |
+| zlecenie | `job` | jednostka pracy = zarazem wpis w kalendarzu; ma termin (`scheduled_at`), zdjęcia i koszty |
+| wizyta | — | dla serwisanta wizyta = zlecenie; osobnej tabeli `visit` nie ma (decyzja 2026-08-13) |
 | wycena | `quote` | |
 | wydatek | `expense` | materiał, paliwo, podwykonawca |
 | wpłata | `payment` | pieniądze, które wpłynęły |
@@ -81,7 +81,7 @@ Nie dodawaj statusów bez pytania.
   i historii: `job`, `expense`, `payment`, `customer`. Twarde `DELETE` tylko dla zdjęć
   i szkiców.
 - Statusy: kolumna `text` + `CHECK` constraint. Bez typów `enum` — migracja enuma boli.
-- Indeksy na tym, po czym filtrujesz: `job(user_id, status)`, `visit(user_id, starts_at)`,
+- Indeksy na tym, po czym filtrujesz: `job(user_id, status)`, `job(user_id, scheduled_at)`,
   `expense(user_id, spent_on)`.
 - Typy TS generowane komendą `supabase gen types typescript` do
   `src/lib/supabase/database.types.ts`. **Ten plik jest generowany — nigdy go nie edytuj
@@ -131,8 +131,9 @@ Tu błąd kosztuje realne pieniądze, więc reguły są sztywne:
 - Strefa prezentacji zawsze `Europe/Warsaw`. Nie polegaj na strefie przeglądarki.
 - „Dziś" i granice tygodnia/miesiąca liczy jedna funkcja z `src/lib/domain/dates.ts`.
   Zmiana czasu i tydzień zaczynający się w poniedziałek to typowe miejsca na błąd.
-- Wizyta ma `starts_at` i `ends_at`. Nakładające się terminy pokazuj jako ostrzeżenie,
-  ale nie blokuj zapisu — realny serwis bywa chaotyczny.
+- Zlecenie ma termin `scheduled_at` (data + godzina, na którą serwisant się umówił);
+  bez `ends_at`. Kilka zleceń na ten sam dzień/godzinę pokazuj informacyjnie,
+  nie blokuj zapisu — realny serwis bywa chaotyczny.
 
 ---
 

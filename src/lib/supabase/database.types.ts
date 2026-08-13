@@ -109,6 +109,69 @@ export type Database = {
           },
         ]
       }
+      job: {
+        Row: {
+          address: string | null
+          created_at: string
+          customer_id: string | null
+          deleted_at: string | null
+          id: string
+          notes: string | null
+          phone: string | null
+          scheduled_at: string | null
+          site_id: string | null
+          status: string
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          address?: string | null
+          created_at?: string
+          customer_id?: string | null
+          deleted_at?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          scheduled_at?: string | null
+          site_id?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Update: {
+          address?: string | null
+          created_at?: string
+          customer_id?: string | null
+          deleted_at?: string | null
+          id?: string
+          notes?: string | null
+          phone?: string | null
+          scheduled_at?: string | null
+          site_id?: string | null
+          status?: string
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "customer"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_site_id_fkey"
+            columns: ["site_id"]
+            isOneToOne: false
+            referencedRelation: "site"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       site: {
         Row: {
           address: string | null

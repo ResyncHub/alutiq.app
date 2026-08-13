@@ -2,12 +2,20 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { CalendarDays, LayoutDashboard, Users, Wallet, MessageSquare } from "lucide-react";
+import {
+  CalendarDays,
+  ClipboardList,
+  LayoutDashboard,
+  Users,
+  Wallet,
+  MessageSquare,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const ITEMS = [
   { href: "/", label: "Dziś", icon: LayoutDashboard },
   { href: "/kalendarz", label: "Kalendarz", icon: CalendarDays },
+  { href: "/zlecenia", label: "Zlecenia", icon: ClipboardList },
   { href: "/klienci", label: "Klienci", icon: Users },
   { href: "/finanse", label: "Finanse", icon: Wallet },
   { href: "/czat", label: "Czat", icon: MessageSquare },

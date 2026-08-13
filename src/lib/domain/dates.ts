@@ -172,3 +172,59 @@ export function formatDatePl(instant: Date): string {
 export function formatDateTimePl(instant: Date): string {
   return dateTimeFormatterPl.format(instant);
 }
+
+const timeFormatterPl = new Intl.DateTimeFormat("pl-PL", {
+  timeZone: WARSAW_TZ,
+  hour: "2-digit",
+  minute: "2-digit",
+});
+
+/** Formatuje chwilę jako godzinę w strefie warszawskiej (do renderowania). */
+export function formatTimePl(instant: Date): string {
+  return timeFormatterPl.format(instant);
+}
+
+/**
+ * "YYYY-MM-DDTHH:mm" z pola datetime-local (czas warszawski) -> ISO UTC.
+ * Używane przy zapisie terminu zlecenia.
+ */
+export function warsawLocalToUtcIso(local: string): string {
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})$/.exec(local);
+  if (!m) throw new Error(`Nieprawidłowy termin (oczekiwano YYYY-MM-DDTHH:mm): ${local}`);
+  const d = warsawWallToUtc(
+    Number(m[1]),
+    Number(m[2]),
+    Number(m[3]),
+    Number(m[4]),
+    Number(m[5]),
+  );
+  return d.toISOString();
+}
+
+/**
+ * ISO UTC -> "YYYY-MM-DDTHH:mm" w czasie warszawskim (do pola datetime-local).
+ */
+export function utcToWarsawLocalInput(iso: string): string {
+  const dtf = new Intl.DateTimeFormat("sv-SE", {
+    timeZone: WARSAW_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  });
+  // sv-SE daje "YYYY-MM-DD HH:mm"
+  return dtf.format(new Date(iso)).replace(" ", "T");
+}
+
+/** Data kalendarzowa "YYYY-MM-DD" w Warszawie dla danej chwili UTC. */
+export function warsawDateOf(instant: Date): IsoDate {
+  const dtf = new Intl.DateTimeFormat("en-CA", {
+    timeZone: WARSAW_TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+  return dtf.format(instant);
+}
