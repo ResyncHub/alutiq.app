@@ -186,6 +186,17 @@ export async function updateJobStatus(input: unknown): Promise<Job> {
   return data;
 }
 
+/** Zapisuje samą notatkę zlecenia (edytowalna na każdym etapie). */
+export async function updateJobNotes(id: string, notes: string | null): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("job")
+    .update({ notes })
+    .eq("id", id)
+    .is("deleted_at", null);
+  if (error) throw new Error(`Nie udało się zapisać notatki: ${error.message}`);
+}
+
 /** Miękkie kasowanie zlecenia (§4). */
 export async function softDeleteJob(id: string): Promise<void> {
   const supabase = await createClient();

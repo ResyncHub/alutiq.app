@@ -13,6 +13,12 @@ const nextConfig: NextConfig = {
   // Next 16 przy `next dev` dopisuje własny blok do CLAUDE.md — wyłączamy,
   // bo nasz CLAUDE.md jest ręcznie utrzymywanym źródłem zasad projektu.
   agentRules: false,
+  experimental: {
+    // Zdjęcia (skompresowane <400 kB) trafiają przez Server Action; margines na zapas.
+    serverActions: {
+      bodySizeLimit: "5mb",
+    },
+  },
 };
 
 export default nextConfig;

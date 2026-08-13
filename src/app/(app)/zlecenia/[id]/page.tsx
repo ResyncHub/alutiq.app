@@ -3,10 +3,13 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarClock, MapPin, Phone, User } from "lucide-react";
 import { formatDateTimePl } from "@/lib/domain/dates";
 import { getJob } from "@/lib/db/jobs";
+import { listPhotosForJob } from "@/lib/db/photos";
 import { listCustomerOptions } from "@/lib/db/customers";
 import { JobStatusBadge } from "@/components/job-status-badge";
 import { jobTitle } from "../job-list-item";
 import { JobActions } from "./job-actions";
+import { NoteEditor } from "./note-editor";
+import { PhotoSection } from "./photo-section";
 
 function siteLine(site: NonNullable<Awaited<ReturnType<typeof getJob>>>["site"]): string | null {
   if (!site) return null;
@@ -20,7 +23,10 @@ export default async function JobDetailPage({ params }: PageProps<"/zlecenia/[id
   const job = await getJob(id);
   if (!job) notFound();
 
-  const customers = await listCustomerOptions();
+  const [customers, photos] = await Promise.all([
+    listCustomerOptions(),
+    listPhotosForJob(id),
+  ]);
   const site = siteLine(job.site);
 
   return (
@@ -73,13 +79,12 @@ export default async function JobDetailPage({ params }: PageProps<"/zlecenia/[id
         ) : null}
       </div>
 
-      {job.notes ? (
-        <p className="mb-5 whitespace-pre-wrap rounded-app border border-border bg-surface px-4 py-3 text-sm">
-          {job.notes}
-        </p>
-      ) : null}
-
       <JobActions job={job} customers={customers} />
+
+      <div className="mt-6">
+        <NoteEditor jobId={job.id} initialNotes={job.notes} />
+        <PhotoSection jobId={job.id} photos={photos} />
+      </div>
     </>
   );
 }

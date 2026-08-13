@@ -4,13 +4,18 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { JOB_STATUSES } from "@/lib/domain/dictionaries";
 import { addJobFormSchema, updateJobSchema } from "@/lib/validation/job";
+import { jobNotesSchema, uploadPhotoSchema } from "@/lib/validation/photo";
 import {
   createJob,
   softDeleteJob,
   updateJob,
+  updateJobNotes,
   updateJobStatus,
 } from "@/lib/db/jobs";
 import { findOrCreateCustomer } from "@/lib/db/customers";
+import { deletePhoto, uploadPhoto } from "@/lib/db/photos";
+
+const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 export type ActionResult<T = undefined> =
   | { ok: true; data: T }
@@ -100,6 +105,60 @@ export async function deleteJobAction(id: string): Promise<ActionResult> {
     z.string().uuid().parse(id);
     await softDeleteJob(id);
     revalidateJobViews(id);
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return { ok: false, error: toMessage(e) };
+  }
+}
+
+/** Zapis notatki zlecenia (edytowalna na każdym etapie). */
+export async function setJobNotesAction(input: unknown): Promise<ActionResult> {
+  try {
+    const { id, notes } = jobNotesSchema.parse(input);
+    await updateJobNotes(id, notes);
+    revalidatePath(`/zlecenia/${id}`);
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return { ok: false, error: toMessage(e) };
+  }
+}
+
+/** Upload zdjęcia (skompresowanego w przeglądarce) do zlecenia. */
+export async function uploadPhotoAction(formData: FormData): Promise<ActionResult> {
+  try {
+    const jobId = String(formData.get("jobId") ?? "");
+    const descriptionRaw = formData.get("description");
+    const description =
+      typeof descriptionRaw === "string" && descriptionRaw.trim().length > 0
+        ? descriptionRaw.trim()
+        : null;
+    uploadPhotoSchema.parse({ jobId, description });
+
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      throw new Error("Brak pliku zdjęcia.");
+    }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      throw new Error("Zdjęcie jest za duże.");
+    }
+
+    await uploadPhoto({ jobId, description, bytes: await file.arrayBuffer() });
+    revalidatePath(`/zlecenia/${jobId}`);
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return { ok: false, error: toMessage(e) };
+  }
+}
+
+/** Usunięcie zdjęcia (twarde). `jobId` do odświeżenia widoku. */
+export async function deletePhotoAction(
+  id: string,
+  jobId: string,
+): Promise<ActionResult> {
+  try {
+    z.string().uuid().parse(id);
+    await deletePhoto(id);
+    revalidatePath(`/zlecenia/${jobId}`);
     return { ok: true, data: undefined };
   } catch (e) {
     return { ok: false, error: toMessage(e) };
