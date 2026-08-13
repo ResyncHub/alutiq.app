@@ -1,0 +1,80 @@
+@import "tailwindcss";
+
+/*
+  Motyw Alutiq — techniczny, wysoki kontrast, czytelny na dworze.
+  Jasny domyślnie (lepszy w słońcu), ciemny wg preferencji systemu.
+  Kolory jako tokeny semantyczne — komponenty nie używają wartości wprost.
+*/
+:root {
+  --background: #f4f5f7;
+  --surface: #ffffff;
+  --surface-2: #eceef1;
+  --border: #d6dae1;
+  --foreground: #0d1117;
+  --muted: #5b6472;
+  --accent: #1466ff;
+  --accent-foreground: #ffffff;
+  --success: #0a7d3f;
+  --warning: #b25e00;
+  --danger: #c02626;
+  --radius: 0.75rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0d12;
+    --surface: #12161d;
+    --surface-2: #1a1f28;
+    --border: #262d38;
+    --foreground: #e8ecf1;
+    --muted: #8a95a5;
+    --accent: #3d82ff;
+    --accent-foreground: #06111f;
+    --success: #35c07a;
+    --warning: #e0913a;
+    --danger: #ff5c5c;
+  }
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-border: var(--border);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+  --radius-app: var(--radius);
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans), system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Liczby i dane techniczne — czcionka o stałej szerokości, cyfry tabelaryczne. */
+.tabular {
+  font-family: var(--font-mono), ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Cel dotykowy min. 44 px (§9). */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}

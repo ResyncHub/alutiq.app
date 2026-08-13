@@ -1,0 +1,14 @@
+# Dziennik decyzji architektonicznych
+
+Jedna linia = jedna decyzja: data, decyzja, powód (CLAUDE.md §11).
+
+- **2026-08-13** — Scaffold na Next.js 16.3 (App Router) + React 19 + Tailwind v4 + TS strict. Powód: aktualne wersje zatwierdzonego stacku (§2).
+- **2026-08-13** — Test runner: **vitest**. Powód: §12 wymaga testów, a CLAUDE.md nie wskazuje frameworka; vitest jest lekki i zintegrowany z Vite/TS.
+- **2026-08-13** — Brak biblioteki do dat; `dates.ts` liczy strefę i DST na natywnym `Intl`. Powód: §2 — minimalizujemy zależności.
+- **2026-08-13** — Pierwsza migracja wgrana przez **Supabase Management API** (access token), bo `supabase db push` odrzucił hasło do bazy. Wersję zarejestrowano w `supabase_migrations.schema_migrations`, żeby przyszły `db push` był spójny. Powód: nie blokować pracy; hasło do bazy do naprawy przez użytkownika.
+- **2026-08-13** — Motyw jasny domyślnie, ciemny wg preferencji systemu. Powód: §9 — narzędzie używane na dworze, jasny lepiej czytelny w słońcu.
+- **2026-08-13** — Kolumny tabel dostają `user_id uuid not null default auth.uid()`. Powód: wygodne wstawianie + zgodność z polityką RLS `auth.uid() = user_id`.
+- **2026-08-13** — Miękkie kasowanie (`deleted_at`) także na `site` i `device`, nie tylko na `customer`. Powód: interpretacja §4 — twarde `DELETE` tylko dla zdjęć i szkiców; obiekty i urządzenia wiążą się z historią zleceń.
+- **2026-08-13** — `device.device_type` jako `text` + `CHECK` (gate, drive, window, door, automatic_door, roller_shutter, awning, pergola, other). Powód: §4 — bez enumów; zestaw pokrywa serwis okienno-drzwiowy + automatykę + automatykę tarasową.
+- **2026-08-13** — Warstwa integracji LLM budowana pod **Claude (Anthropic)**; czat najpierw w aplikacji, architektura gotowa pod Telegram (wspólna warstwa narzędzi nad `src/lib/db`). Powód: decyzja użytkownika.
+- **2026-08-13** — Firma zwolniona z VAT: domyślna stawka 0, VAT ukryty w UI, ale kolumny `net_gr/vat_gr/gross_gr` zostają w bazie. Powód: §6 + decyzja użytkownika.
