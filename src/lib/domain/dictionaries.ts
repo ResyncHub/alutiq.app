@@ -77,6 +77,43 @@ export const JOB_STATUS_CLASSES: Record<JobStatus, string> = {
   cancelled: "bg-danger/15 text-danger",
 };
 
+/** Kolor ramki statusu — do oznaczeń dnia w kalendarzu. */
+export const JOB_STATUS_BORDER: Record<JobStatus, string> = {
+  new: "border-muted",
+  scheduled: "border-accent",
+  in_progress: "border-accent",
+  waiting_parts: "border-warning",
+  done: "border-success",
+  settled: "border-success",
+  cancelled: "border-danger",
+};
+
+export function jobStatusBorder(value: string): string {
+  return (JOB_STATUS_BORDER as Record<string, string>)[value] ?? "border-muted";
+}
+
+/**
+ * Priorytet do wyboru koloru ramki dnia, gdy jest kilka zleceń (pierwszy wygrywa).
+ * Najpierw stany wymagające uwagi, na końcu zakończone/anulowane.
+ */
+const STATUS_PRIORITY: JobStatus[] = [
+  "waiting_parts",
+  "in_progress",
+  "scheduled",
+  "new",
+  "done",
+  "settled",
+  "cancelled",
+];
+
+/** Wybiera status o najwyższym priorytecie z listy (do koloru ramki dnia). */
+export function dominantStatus(statuses: string[]): JobStatus | null {
+  for (const s of STATUS_PRIORITY) {
+    if (statuses.includes(s)) return s;
+  }
+  return null;
+}
+
 export function jobStatusLabel(value: string): string {
   return (JOB_STATUS_LABELS as Record<string, string>)[value] ?? value;
 }

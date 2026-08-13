@@ -13,12 +13,20 @@ import {
   todayInWarsaw,
   warsawDateOf,
 } from "@/lib/domain/dates";
+import { dominantStatus, jobStatusBorder } from "@/lib/domain/dictionaries";
 import type { JobWithCustomer } from "@/lib/db/jobs";
 import { JobListItem } from "../zlecenia/job-list-item";
 import { JobQuickAdd } from "../zlecenia/job-quick-add";
 import type { CustomerOption } from "../zlecenia/job-form";
 
 const WEEKDAYS = ["Pn", "Wt", "Śr", "Cz", "Pt", "So", "Nd"];
+
+const LEGEND = [
+  { cls: "bg-accent", label: "Zaplanowane / w toku" },
+  { cls: "bg-warning", label: "Czeka na części" },
+  { cls: "bg-success", label: "Zrobione / rozliczone" },
+  { cls: "bg-danger", label: "Anulowane" },
+] as const;
 
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n);
@@ -106,8 +114,9 @@ export function MonthCalendar({
 
       <div className="grid grid-cols-7 gap-1">
         {days.map((day) => {
+          const dayJobs = byDay.get(day) ?? [];
+          const status = dominantStatus(dayJobs.map((j) => j.status));
           const inMonth = day.startsWith(month);
-          const count = byDay.get(day)?.length ?? 0;
           const isToday = day === today;
           const isSelected = day === selected;
           return (
@@ -116,27 +125,26 @@ export function MonthCalendar({
               type="button"
               onClick={() => setSelected(day)}
               className={cn(
-                "flex aspect-square flex-col items-center justify-center rounded-app text-sm transition-colors",
+                "flex aspect-square items-center justify-center rounded-app border-2 text-sm transition-colors",
                 inMonth ? "text-foreground" : "text-muted/40",
-                isSelected
-                  ? "bg-accent text-accent-foreground"
-                  : "hover:bg-surface-2",
-                !isSelected && isToday ? "ring-1 ring-accent" : "",
+                status ? jobStatusBorder(status) : "border-transparent",
+                isSelected ? "bg-accent/15 ring-1 ring-accent" : "hover:bg-surface-2",
+                !isSelected && isToday ? "font-semibold text-accent" : "",
               )}
             >
               <span>{Number(day.slice(-2))}</span>
-              {count > 0 ? (
-                <span
-                  className={cn(
-                    "mt-0.5 size-1.5 rounded-full",
-                    isSelected ? "bg-accent-foreground" : "bg-accent",
-                  )}
-                  aria-hidden
-                />
-              ) : null}
             </button>
           );
         })}
+      </div>
+
+      <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1 text-[11px] text-muted">
+        {LEGEND.map((l) => (
+          <span key={l.label} className="inline-flex items-center gap-1">
+            <span className={cn("size-1.5 rounded-full", l.cls)} aria-hidden />
+            {l.label}
+          </span>
+        ))}
       </div>
 
       <div className="mt-5">
