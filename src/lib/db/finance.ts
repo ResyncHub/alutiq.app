@@ -105,6 +105,45 @@ export async function softDeleteExpense(id: string): Promise<void> {
   if (error) throw new Error(`Nie udało się usunąć wydatku: ${error.message}`);
 }
 
+/** Miesięczne sumy wpłat i wydatków dla całego roku (12 pozycji). */
+export async function getYearlyTotals(
+  year: number,
+): Promise<{ month: number; incomeGr: number; expenseGr: number }[]> {
+  const supabase = await createClient();
+  const from = `${year}-01-01`;
+  const to = `${year}-12-31`;
+
+  const [pays, exps] = await Promise.all([
+    supabase
+      .from("payment")
+      .select("paid_on, amount_gr")
+      .is("deleted_at", null)
+      .gte("paid_on", from)
+      .lte("paid_on", to),
+    supabase
+      .from("expense")
+      .select("spent_on, gross_gr")
+      .is("deleted_at", null)
+      .gte("spent_on", from)
+      .lte("spent_on", to),
+  ]);
+  if (pays.error) throw new Error(`Nie udało się pobrać wpłat: ${pays.error.message}`);
+  if (exps.error) throw new Error(`Nie udało się pobrać wydatków: ${exps.error.message}`);
+
+  const months = Array.from({ length: 12 }, (_, i) => ({
+    month: i + 1,
+    incomeGr: 0,
+    expenseGr: 0,
+  }));
+  for (const p of pays.data ?? []) {
+    months[Number(p.paid_on.slice(5, 7)) - 1].incomeGr += p.amount_gr;
+  }
+  for (const e of exps.data ?? []) {
+    months[Number(e.spent_on.slice(5, 7)) - 1].expenseGr += e.gross_gr;
+  }
+  return months;
+}
+
 // Wpłaty ---------------------------------------------------------------------
 
 export async function listPayments(

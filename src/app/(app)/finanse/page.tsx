@@ -8,11 +8,12 @@ import {
 import { endOfMonth, startOfMonth, todayInWarsaw } from "@/lib/domain/dates";
 import { formatPln, sumGr } from "@/lib/domain/money";
 import { cn } from "@/lib/utils";
-import { listExpenses, listPayments } from "@/lib/db/finance";
+import { getYearlyTotals, listExpenses, listPayments } from "@/lib/db/finance";
 import { listJobOptions } from "@/lib/db/jobs";
 import { ExpenseItem } from "./expense-item";
 import { PaymentItem } from "./payment-item";
 import { ExpenseQuickAdd, PaymentQuickAdd } from "./finance-quick-add";
+import { CategoryBars, IncomeExpenseChart, ProfitChart } from "./finance-charts";
 
 function pad2(n: number): string {
   return n < 10 ? `0${n}` : String(n);
@@ -39,10 +40,12 @@ export default async function FinancePage({ searchParams }: PageProps<"/finanse"
   const from = `${month}-01`;
   const to = endOfMonth(startOfMonth(from));
 
-  const [expenses, payments, jobs] = await Promise.all([
+  const year = Number(month.slice(0, 4));
+  const [expenses, payments, jobs, yearly] = await Promise.all([
     listExpenses(from, to),
     listPayments(from, to),
     listJobOptions(),
+    getYearlyTotals(year),
   ]);
 
   const expensesGr = sumGr(expenses.map((e) => e.gross_gr));
@@ -105,22 +108,14 @@ export default async function FinancePage({ searchParams }: PageProps<"/finanse"
         </div>
       </div>
 
-      {/* Koszty wg kategorii */}
-      {byCategory.length > 0 ? (
-        <div className="mb-6 rounded-app border border-border bg-surface p-3">
-          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
-            Koszty wg kategorii
-          </h3>
-          <ul className="flex flex-col gap-1">
-            {byCategory.map((row) => (
-              <li key={row.category} className="flex justify-between text-sm">
-                <span>{row.label}</span>
-                <span className="tabular">{formatPln(row.sumGr)}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      ) : null}
+      {/* Wykresy */}
+      <div className="mb-6 flex flex-col gap-4">
+        <IncomeExpenseChart data={yearly} year={year} />
+        <ProfitChart data={yearly} year={year} />
+        {byCategory.length > 0 ? (
+          <CategoryBars rows={byCategory.map((r) => ({ label: r.label, sumGr: r.sumGr }))} />
+        ) : null}
+      </div>
 
       {/* Wpłaty */}
       <section className="mb-6">
