@@ -10,6 +10,7 @@ import {
   softDeleteJob,
   updateJob,
   updateJobNotes,
+  updateJobSchedule,
   updateJobStatus,
 } from "@/lib/db/jobs";
 import { findOrCreateCustomer } from "@/lib/db/customers";
@@ -104,6 +105,20 @@ export async function deleteJobAction(id: string): Promise<ActionResult> {
   try {
     z.string().uuid().parse(id);
     await softDeleteJob(id);
+    revalidateJobViews(id);
+    return { ok: true, data: undefined };
+  } catch (e) {
+    return { ok: false, error: toMessage(e) };
+  }
+}
+
+/** Szybka zmiana terminu (bez wchodzenia w pełną edycję). */
+export async function setJobScheduleAction(
+  id: string,
+  scheduledAt: string,
+): Promise<ActionResult> {
+  try {
+    await updateJobSchedule({ id, scheduledAt });
     revalidateJobViews(id);
     return { ok: true, data: undefined };
   } catch (e) {

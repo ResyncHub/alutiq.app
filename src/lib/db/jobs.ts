@@ -4,6 +4,7 @@ import type { Database } from "@/lib/supabase/database.types";
 import { warsawLocalToUtcIso } from "@/lib/domain/dates";
 import {
   createJobSchema,
+  updateJobScheduleSchema,
   updateJobSchema,
   updateJobStatusSchema,
 } from "@/lib/validation/job";
@@ -213,6 +214,21 @@ export async function updateJobNotes(id: string, notes: string | null): Promise<
     .eq("id", id)
     .is("deleted_at", null);
   if (error) throw new Error(`Nie udało się zapisać notatki: ${error.message}`);
+}
+
+/** Zmienia sam termin zlecenia (szybkie przełożenie, np. gdy dojadą części). */
+export async function updateJobSchedule(input: unknown): Promise<Job> {
+  const values = updateJobScheduleSchema.parse(input);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("job")
+    .update({ scheduled_at: toScheduledIso(values.scheduledAt) })
+    .eq("id", values.id)
+    .is("deleted_at", null)
+    .select("*")
+    .single();
+  if (error) throw new Error(`Nie udało się zmienić terminu: ${error.message}`);
+  return data;
 }
 
 /** Miękkie kasowanie zlecenia (§4). */

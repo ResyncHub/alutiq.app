@@ -56,6 +56,12 @@ export const updateJobStatusSchema = z.object({
   status: z.enum(JOB_STATUSES),
 });
 
+/** Sama zmiana terminu (szybkie przełożenie na inny dzień/godzinę). */
+export const updateJobScheduleSchema = z.object({
+  id: z.string().uuid(),
+  scheduledAt: optionalLocalDateTime,
+});
+
 /**
  * Formularz dodawania zlecenia z tworzeniem klienta „w locie".
  * Tryb „new": wpisujesz nowego klienta (imię/nazwa + telefon) — jeśli klient

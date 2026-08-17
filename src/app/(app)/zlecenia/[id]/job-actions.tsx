@@ -4,12 +4,18 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TextInput } from "@/components/ui/field";
 import { Sheet } from "@/components/ui/sheet";
 import { DeleteButton } from "@/components/ui/delete-button";
 import { JOB_STATUSES, JOB_STATUS_LABELS } from "@/lib/domain/dictionaries";
 import { utcToWarsawLocalInput } from "@/lib/domain/dates";
 import type { JobDetail } from "@/lib/db/jobs";
-import { deleteJobAction, setJobStatusAction, updateJobAction } from "../actions";
+import {
+  deleteJobAction,
+  setJobScheduleAction,
+  setJobStatusAction,
+  updateJobAction,
+} from "../actions";
 import { JobForm, type CustomerOption } from "../job-form";
 
 const selectClass =
@@ -27,6 +33,12 @@ export function JobActions({
   const [status, setStatus] = useState(job.status);
   const [statusError, setStatusError] = useState<string | null>(null);
 
+  const savedSchedule = job.scheduled_at ? utcToWarsawLocalInput(job.scheduled_at) : "";
+  const [schedule, setSchedule] = useState(savedSchedule);
+  const [scheduleSaved, setScheduleSaved] = useState(savedSchedule);
+  const [schedulePending, setSchedulePending] = useState(false);
+  const [scheduleError, setScheduleError] = useState<string | null>(null);
+
   async function onStatusChange(next: string) {
     setStatusError(null);
     const prev = status;
@@ -37,6 +49,19 @@ export function JobActions({
       setStatusError(res.error);
       return;
     }
+    router.refresh();
+  }
+
+  async function onScheduleSave() {
+    setScheduleError(null);
+    setSchedulePending(true);
+    const res = await setJobScheduleAction(job.id, schedule);
+    setSchedulePending(false);
+    if (!res.ok) {
+      setScheduleError(res.error);
+      return;
+    }
+    setScheduleSaved(schedule);
     router.refresh();
   }
 
@@ -78,6 +103,32 @@ export function JobActions({
       {statusError ? (
         <p className="text-sm text-danger" role="alert">
           {statusError}
+        </p>
+      ) : null}
+
+      <div className="flex items-end gap-2">
+        <label className="flex-1">
+          <span className="mb-1 block text-xs text-muted">Termin</span>
+          <TextInput
+            type="datetime-local"
+            value={schedule}
+            onChange={(e) => setSchedule(e.target.value)}
+          />
+        </label>
+        {schedule !== scheduleSaved ? (
+          <Button onClick={onScheduleSave} disabled={schedulePending} className="px-3">
+            {schedulePending ? "Zapisywanie…" : "Zapisz"}
+          </Button>
+        ) : null}
+      </div>
+      {schedule !== scheduleSaved ? (
+        <p className="-mt-1 text-xs text-muted">
+          {schedule ? "Nowy termin — zapisz, żeby przenieść zlecenie." : "Termin zostanie usunięty (bez terminu)."}
+        </p>
+      ) : null}
+      {scheduleError ? (
+        <p className="text-sm text-danger" role="alert">
+          {scheduleError}
         </p>
       ) : null}
 
