@@ -16,6 +16,13 @@ export const metadata: Metadata = {
   title: "Alutiq",
   description: "System operacyjny serwisu okienno-drzwiowego i automatyki.",
   applicationName: "Alutiq",
+  appleWebApp: {
+    // iOS ignoruje manifest.webmanifest przy „Dodaj do ekranu głównego" —
+    // te znaczniki są jedynym sposobem na tryb pełnoekranowy (bez paska Safari).
+    capable: true,
+    statusBarStyle: "default",
+    title: "Alutiq",
+  },
 };
 
 export const viewport: Viewport = {
