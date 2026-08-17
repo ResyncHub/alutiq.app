@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { createClient } from "@/lib/supabase/client";
@@ -29,14 +30,16 @@ export default function LoginPage() {
   return (
     <main className="flex min-h-full flex-1 items-center justify-center px-4 py-10">
       <div className="w-full max-w-sm">
-        <div className="mb-6 flex items-center gap-2">
-          <span className="grid size-9 place-items-center rounded-md bg-accent text-lg font-bold text-accent-foreground">
-            A
-          </span>
-          <div>
-            <h1 className="text-lg font-semibold tracking-tight">Alutiq</h1>
-            <p className="text-sm text-muted">Zaloguj się do systemu serwisu</p>
-          </div>
+        <div className="mb-8 flex flex-col items-center gap-3 text-center">
+          <Image
+            src="/logo-wordmark.png"
+            alt="Alutiq"
+            width={90}
+            height={36}
+            priority
+            className="rounded-md"
+          />
+          <p className="text-sm text-muted">Zaloguj się do systemu serwisu</p>
         </div>
 
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">

@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { redirect } from "next/navigation";
 import { BottomNav } from "@/components/app-shell/bottom-nav";
 import { SignOutButton } from "@/components/app-shell/sign-out-button";
@@ -17,11 +18,15 @@ export default async function AppLayout({ children }: LayoutProps<"/">) {
     <div className="flex min-h-full flex-col">
       <header className="sticky top-0 z-20 border-b border-border bg-surface/95 backdrop-blur">
         <div className="mx-auto flex max-w-3xl items-center justify-between px-4 py-3">
-          <Link href="/" className="flex items-center gap-2 font-semibold tracking-tight">
-            <span className="grid size-7 place-items-center rounded-md bg-accent text-accent-foreground">
-              A
-            </span>
-            Alutiq
+          <Link href="/" className="flex items-center">
+            <Image
+              src="/logo-wordmark.png"
+              alt="Alutiq"
+              width={60}
+              height={24}
+              priority
+              className="rounded-md"
+            />
           </Link>
           <div className="flex items-center gap-3">
             <span className="hidden text-xs text-muted sm:inline">{user.email}</span>
