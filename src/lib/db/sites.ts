@@ -39,6 +39,40 @@ export async function listSitesForCustomer(customerId: string): Promise<Site[]> 
   return data ?? [];
 }
 
+/**
+ * Znajduje obiekt klienta o dokładnie tym adresie albo tworzy nowy.
+ * Używane, gdy ktoś wpisze adres ręcznie zamiast wybrać istniejący obiekt —
+ * dzięki temu przy kolejnym zleceniu ten adres jest już do wyboru.
+ */
+export async function findOrCreateSiteByAddress(params: {
+  customerId: string;
+  address: string;
+}): Promise<string> {
+  const supabase = await createClient();
+  const address = params.address.trim();
+
+  const { data: existing, error: selErr } = await supabase
+    .from("site")
+    .select("id")
+    .eq("customer_id", params.customerId)
+    .eq("address", address)
+    .is("deleted_at", null)
+    .limit(1)
+    .maybeSingle();
+  if (selErr) throw new Error(`Nie udało się sprawdzić obiektu: ${selErr.message}`);
+  if (existing) return existing.id;
+
+  const created = await createSite({
+    customerId: params.customerId,
+    label: null,
+    address,
+    city: null,
+    postalCode: null,
+    notes: null,
+  });
+  return created.id;
+}
+
 /** Tworzy obiekt (adres) dla klienta. */
 export async function createSite(input: unknown): Promise<Site> {
   const values = createSiteSchema.parse(input);

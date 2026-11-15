@@ -14,6 +14,7 @@ import {
   updateJobStatus,
 } from "@/lib/db/jobs";
 import { findOrCreateCustomer } from "@/lib/db/customers";
+import { findOrCreateSiteByAddress } from "@/lib/db/sites";
 import { deletePhoto, uploadPhoto } from "@/lib/db/photos";
 
 const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
@@ -55,7 +56,15 @@ export async function addJobAction(
       });
     }
 
-    const siteId = v.customerMode === "existing" ? v.siteId : null;
+    let siteId = v.customerMode === "existing" ? v.siteId : null;
+    let address = v.address;
+
+    // Adres wpisany ręcznie dla klienta z bazy -> zapisujemy jako jego obiekt,
+    // żeby był do wyboru przy kolejnym zleceniu (bez ponownego wpisywania).
+    if (!siteId && customerId && address) {
+      siteId = await findOrCreateSiteByAddress({ customerId, address });
+      address = null;
+    }
 
     const job = await createJob({
       customerId,
@@ -63,7 +72,7 @@ export async function addJobAction(
       title: v.title,
       notes: v.notes,
       phone: null,
-      address: v.address,
+      address,
       status: v.status,
       scheduledAt: v.scheduledAt,
     });
@@ -78,7 +87,15 @@ export async function addJobAction(
 export async function updateJobAction(input: unknown): Promise<ActionResult> {
   try {
     const values = updateJobSchema.parse(input);
-    await updateJob(values);
+
+    let siteId = values.siteId;
+    let address = values.address;
+    if (!siteId && values.customerId && address) {
+      siteId = await findOrCreateSiteByAddress({ customerId: values.customerId, address });
+      address = null;
+    }
+
+    await updateJob({ ...values, siteId, address });
     revalidateJobViews(values.id);
     return { ok: true, data: undefined };
   } catch (e) {
