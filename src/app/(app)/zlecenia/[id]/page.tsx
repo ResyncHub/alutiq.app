@@ -10,20 +10,13 @@ import { listCustomerOptions } from "@/lib/db/customers";
 import { listSiteOptions } from "@/lib/db/sites";
 import { listExpensesForJob, listPaymentsForJob } from "@/lib/db/finance";
 import { JobStatusBadge } from "@/components/job-status-badge";
-import { jobTitle } from "../job-list-item";
+import { formatSiteAddress, jobTitle } from "../job-list-item";
 import { JobActions } from "./job-actions";
 import { NoteEditor } from "./note-editor";
 import { PhotoSection } from "./photo-section";
 import { ExpenseItem } from "../../finanse/expense-item";
 import { PaymentItem } from "../../finanse/payment-item";
 import { ExpenseQuickAdd, PaymentQuickAdd } from "../../finanse/finance-quick-add";
-
-function siteLine(site: NonNullable<Awaited<ReturnType<typeof getJob>>>["site"]): string | null {
-  if (!site) return null;
-  const parts = [site.label, site.address, [site.postal_code, site.city].filter(Boolean).join(" ")]
-    .filter(Boolean);
-  return parts.length > 0 ? parts.join(", ") : null;
-}
 
 export default async function JobDetailPage({ params }: PageProps<"/zlecenia/[id]">) {
   const { id } = await params;
@@ -37,7 +30,7 @@ export default async function JobDetailPage({ params }: PageProps<"/zlecenia/[id
     listExpensesForJob(id),
     listPaymentsForJob(id),
   ]);
-  const site = siteLine(job.site);
+  const site = formatSiteAddress(job.site);
 
   const incomeGr = sumGr(jobPayments.map((p) => p.amount_gr));
   const costGr = sumGr(jobExpenses.map((e) => e.gross_gr));

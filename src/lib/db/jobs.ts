@@ -13,18 +13,24 @@ export type Job = Database["public"]["Tables"]["job"]["Row"];
 type Customer = Database["public"]["Tables"]["customer"]["Row"];
 type Site = Database["public"]["Tables"]["site"]["Row"];
 
-/** Zlecenie z podstawowymi danymi klienta (do list i kalendarza). */
+type SiteAddressFields = Pick<Site, "id" | "label" | "address" | "city" | "postal_code">;
+
+/** Zlecenie z podstawowymi danymi klienta i obiektu (do list i kalendarza). */
 export type JobWithCustomer = Job & {
   customer: Pick<Customer, "id" | "name" | "phone"> | null;
+  site: SiteAddressFields | null;
 };
 
 /** Zlecenie ze szczegółami klienta i obiektu (do widoku szczegółów). */
 export type JobDetail = Job & {
   customer: Pick<Customer, "id" | "name" | "phone" | "email"> | null;
-  site: Pick<Site, "id" | "label" | "address" | "city" | "postal_code"> | null;
+  site: SiteAddressFields | null;
 };
 
-const WITH_CUSTOMER = "*, customer:customer_id(id, name, phone)";
+// Dociągamy też obiekt (site) — adres zlecenia bywa tylko tam, gdy wybrano
+// obiekt klienta zamiast wpisywać adres ręcznie (§ listy/kalendarz muszą go pokazać).
+const WITH_CUSTOMER =
+  "*, customer:customer_id(id, name, phone), site:site_id(id, label, address, city, postal_code)";
 
 /** Zlecenia z terminem w danym zakresie chwil [startUtc, endUtc). */
 export async function listJobsInRange(

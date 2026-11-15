@@ -4,6 +4,27 @@ import { formatTimePl } from "@/lib/domain/dates";
 import { JobStatusBadge } from "@/components/job-status-badge";
 import type { JobWithCustomer } from "@/lib/db/jobs";
 
+/**
+ * Formatuje adres obiektu (site) jako jeden czytelny string.
+ * Wspólne dla listy zleceń i szczegółów — jedno źródło formatowania.
+ */
+export function formatSiteAddress(
+  site: { label: string | null; address: string | null; city: string | null; postal_code: string | null } | null,
+): string | null {
+  if (!site) return null;
+  const parts = [
+    site.label,
+    site.address,
+    [site.postal_code, site.city].filter(Boolean).join(" "),
+  ].filter(Boolean);
+  return parts.length > 0 ? parts.join(", ") : null;
+}
+
+/** Adres zlecenia: wpisany ręcznie, a w braku tego — z wybranego obiektu klienta. */
+function jobAddress(job: JobWithCustomer): string | null {
+  return job.address || formatSiteAddress(job.site);
+}
+
 /** Główny podpis zlecenia — pierwsze, co jest wypełnione. */
 export function jobTitle(job: JobWithCustomer): string {
   return (
@@ -11,7 +32,7 @@ export function jobTitle(job: JobWithCustomer): string {
     job.customer?.name ||
     job.customer?.phone ||
     job.phone ||
-    job.address ||
+    jobAddress(job) ||
     "Zlecenie"
   );
 }
@@ -20,7 +41,8 @@ export function jobTitle(job: JobWithCustomer): string {
 function jobSubtitle(job: JobWithCustomer): string | null {
   const parts: string[] = [];
   if (job.title && job.customer?.name) parts.push(job.customer.name);
-  if (job.address) parts.push(job.address);
+  const address = jobAddress(job);
+  if (address) parts.push(address);
   else if (!job.customer?.name && job.phone && job.title) parts.push(job.phone);
   return parts.length > 0 ? parts.join(" · ") : null;
 }
