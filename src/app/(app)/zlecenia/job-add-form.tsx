@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, TextArea, TextInput } from "@/components/ui/field";
 import { cn } from "@/lib/utils";
 import { JOB_STATUSES, JOB_STATUS_LABELS } from "@/lib/domain/dictionaries";
+import type { SiteOption } from "@/lib/db/sites";
 import { addJobFormSchema, type AddJobFormValues } from "@/lib/validation/job";
 import type { CustomerOption } from "./job-form";
 
@@ -21,12 +22,14 @@ export function JobAddForm({
   defaultScheduledAt,
   defaultCustomerId,
   customers,
+  sites,
   action,
   onDone,
 }: {
   defaultScheduledAt: string;
   defaultCustomerId?: string;
   customers: CustomerOption[];
+  sites: SiteOption[];
   action: (values: AddJobFormValues) => Promise<Result>;
   onDone: () => void;
 }) {
@@ -37,6 +40,7 @@ export function JobAddForm({
       // Z karty klienta zaczynamy od trybu „z bazy" z podpiętym klientem.
       customerMode: defaultCustomerId ? "existing" : "new",
       customerId: defaultCustomerId ?? "",
+      siteId: "",
       newCustomerName: "",
       newCustomerPhone: "",
       title: "",
@@ -46,8 +50,13 @@ export function JobAddForm({
       scheduledAt: defaultScheduledAt,
     },
   });
-  const mode = useWatch({ control: form.control, name: "customerMode" });
+  const [mode, selectedCustomerId, selectedSiteId] = useWatch({
+    control: form.control,
+    name: ["customerMode", "customerId", "siteId"],
+  });
   const { errors, isSubmitting } = form.formState;
+
+  const customerSites = sites.filter((s) => s.customerId === selectedCustomerId);
 
   const onSubmit = form.handleSubmit(async (values) => {
     setServerError(null);
@@ -68,7 +77,10 @@ export function JobAddForm({
             <button
               key={m}
               type="button"
-              onClick={() => form.setValue("customerMode", m)}
+              onClick={() => {
+                form.setValue("customerMode", m);
+                form.setValue("siteId", "");
+              }}
               className={cn(
                 "touch-target flex-1 rounded-app border text-sm font-medium transition-colors",
                 mode === m
@@ -95,16 +107,38 @@ export function JobAddForm({
             </Field>
           </div>
         ) : (
-          <Field label="Klient z bazy" error={errors.customerId?.message}>
-            <select className={selectClass} {...form.register("customerId")}>
-              <option value="">— wybierz klienta —</option>
-              {customers.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.label}
-                </option>
-              ))}
-            </select>
-          </Field>
+          <div className="flex flex-col gap-3">
+            <Field label="Klient z bazy" error={errors.customerId?.message}>
+              <select
+                className={selectClass}
+                {...form.register("customerId")}
+                onChange={(e) => {
+                  form.setValue("customerId", e.target.value);
+                  form.setValue("siteId", "");
+                }}
+              >
+                <option value="">— wybierz klienta —</option>
+                {customers.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            {customerSites.length > 0 ? (
+              <Field label="Obiekt klienta" error={errors.siteId?.message}>
+                <select className={selectClass} {...form.register("siteId")}>
+                  <option value="">— wpisz adres ręcznie —</option>
+                  {customerSites.map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </Field>
+            ) : null}
+          </div>
         )}
       </div>
 
@@ -136,13 +170,15 @@ export function JobAddForm({
         </select>
       </Field>
 
-      <Field
-        label="Adres"
-        error={errors.address?.message}
-        hint="Gdy zlecenie nie jest podpięte pod obiekt klienta."
-      >
-        <TextInput {...form.register("address")} autoComplete="off" />
-      </Field>
+      {!selectedSiteId ? (
+        <Field
+          label="Adres"
+          error={errors.address?.message}
+          hint="Gdy zlecenie nie jest podpięte pod obiekt klienta."
+        >
+          <TextInput {...form.register("address")} autoComplete="off" />
+        </Field>
+      ) : null}
 
       <Field label="Notatka" error={errors.notes?.message}>
         <TextArea {...form.register("notes")} />

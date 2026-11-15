@@ -8,6 +8,7 @@ import {
   warsawRangeUtc,
 } from "@/lib/domain/dates";
 import { listCustomerOptions } from "@/lib/db/customers";
+import { listSiteOptions } from "@/lib/db/sites";
 import { listJobsInRange, listUnscheduledJobs } from "@/lib/db/jobs";
 import { JobQuickAdd } from "../zlecenia/job-quick-add";
 import { JobListItem } from "../zlecenia/job-list-item";
@@ -30,10 +31,11 @@ export default async function CalendarPage({
   const gridEnd = endOfWeek(endOfMonth(firstOfMonth));
   const { startUtc, endUtc } = warsawRangeUtc(gridStart, gridEnd);
 
-  const [jobs, unscheduled, customers] = await Promise.all([
+  const [jobs, unscheduled, customers, sites] = await Promise.all([
     listJobsInRange(startUtc, endUtc),
     listUnscheduledJobs(),
     listCustomerOptions(),
+    listSiteOptions(),
   ]);
 
   return (
@@ -41,10 +43,10 @@ export default async function CalendarPage({
       <PageHeader
         title="Kalendarz"
         subtitle="Zlecenia i terminy"
-        action={<JobQuickAdd customers={customers} />}
+        action={<JobQuickAdd customers={customers} sites={sites} />}
       />
 
-      <MonthCalendar month={month} jobs={jobs} customers={customers} />
+      <MonthCalendar month={month} jobs={jobs} customers={customers} sites={sites} />
 
       {unscheduled.length > 0 ? (
         <section className="mt-8">

@@ -1,12 +1,13 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
+import { useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import type { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Field, TextArea, TextInput } from "@/components/ui/field";
 import { JOB_STATUSES, JOB_STATUS_LABELS } from "@/lib/domain/dictionaries";
+import type { SiteOption } from "@/lib/db/sites";
 import { createJobSchema, type CreateJobValues } from "@/lib/validation/job";
 
 export type JobFormValues = z.input<typeof createJobSchema>;
@@ -20,12 +21,14 @@ const selectClass =
 export function JobForm({
   defaultValues,
   customers,
+  sites,
   submitLabel,
   action,
   onDone,
 }: {
   defaultValues: JobFormValues;
   customers: CustomerOption[];
+  sites: SiteOption[];
   submitLabel: string;
   action: (values: CreateJobValues) => Promise<Result>;
   onDone: () => void;
@@ -35,7 +38,13 @@ export function JobForm({
     resolver: zodResolver(createJobSchema),
     defaultValues,
   });
+  const [selectedCustomerId, selectedSiteId] = useWatch({
+    control: form.control,
+    name: ["customerId", "siteId"],
+  });
   const { errors, isSubmitting } = form.formState;
+
+  const customerSites = sites.filter((s) => s.customerId === selectedCustomerId);
 
   const onSubmit = form.handleSubmit(async (values) => {
     setServerError(null);
@@ -49,10 +58,15 @@ export function JobForm({
 
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-3">
-      <input type="hidden" {...form.register("siteId")} />
-
       <Field label="Klient" error={errors.customerId?.message}>
-        <select className={selectClass} {...form.register("customerId")}>
+        <select
+          className={selectClass}
+          {...form.register("customerId")}
+          onChange={(e) => {
+            form.setValue("customerId", e.target.value);
+            form.setValue("siteId", "");
+          }}
+        >
           <option value="">— bez klienta —</option>
           {customers.map((c) => (
             <option key={c.id} value={c.id}>
@@ -61,6 +75,21 @@ export function JobForm({
           ))}
         </select>
       </Field>
+
+      {customerSites.length > 0 ? (
+        <Field label="Obiekt klienta" error={errors.siteId?.message}>
+          <select className={selectClass} {...form.register("siteId")}>
+            <option value="">— wpisz adres ręcznie —</option>
+            {customerSites.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </Field>
+      ) : (
+        <input type="hidden" {...form.register("siteId")} />
+      )}
 
       <Field label="Opis" error={errors.title?.message}>
         <TextInput
@@ -92,9 +121,11 @@ export function JobForm({
         </div>
       </div>
 
-      <Field label="Adres" error={errors.address?.message} hint="Gdy zlecenie nie jest podpięte pod obiekt klienta.">
-        <TextInput {...form.register("address")} autoComplete="off" />
-      </Field>
+      {!selectedSiteId ? (
+        <Field label="Adres" error={errors.address?.message} hint="Gdy zlecenie nie jest podpięte pod obiekt klienta.">
+          <TextInput {...form.register("address")} autoComplete="off" />
+        </Field>
+      ) : null}
 
       <Field label="Notatka" error={errors.notes?.message}>
         <TextArea {...form.register("notes")} />

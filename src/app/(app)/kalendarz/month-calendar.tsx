@@ -15,6 +15,7 @@ import {
 } from "@/lib/domain/dates";
 import { dominantStatus, jobStatusBorder } from "@/lib/domain/dictionaries";
 import type { JobWithCustomer } from "@/lib/db/jobs";
+import type { SiteOption } from "@/lib/db/sites";
 import { JobListItem } from "../zlecenia/job-list-item";
 import { JobQuickAdd } from "../zlecenia/job-quick-add";
 import type { CustomerOption } from "../zlecenia/job-form";
@@ -50,10 +51,12 @@ export function MonthCalendar({
   month,
   jobs,
   customers,
+  sites,
 }: {
   month: string;
   jobs: JobWithCustomer[];
   customers: CustomerOption[];
+  sites: SiteOption[];
 }) {
   const today = todayInWarsaw();
   const firstOfMonth = `${month}-01`;
@@ -152,6 +155,7 @@ export function MonthCalendar({
           <h3 className="text-sm font-semibold capitalize">{selectedLabel}</h3>
           <JobQuickAdd
             customers={customers}
+            sites={sites}
             defaultScheduledAt={`${selected}T09:00`}
             triggerLabel="Dodaj"
             variant="outline"

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { getJob } from "@/lib/db/jobs";
 import { listPhotosForJob } from "@/lib/db/photos";
 import { listCustomerOptions } from "@/lib/db/customers";
+import { listSiteOptions } from "@/lib/db/sites";
 import { listExpensesForJob, listPaymentsForJob } from "@/lib/db/finance";
 import { JobStatusBadge } from "@/components/job-status-badge";
 import { jobTitle } from "../job-list-item";
@@ -29,8 +30,9 @@ export default async function JobDetailPage({ params }: PageProps<"/zlecenia/[id
   const job = await getJob(id);
   if (!job) notFound();
 
-  const [customers, photos, jobExpenses, jobPayments] = await Promise.all([
+  const [customers, sites, photos, jobExpenses, jobPayments] = await Promise.all([
     listCustomerOptions(),
+    listSiteOptions(),
     listPhotosForJob(id),
     listExpensesForJob(id),
     listPaymentsForJob(id),
@@ -91,7 +93,7 @@ export default async function JobDetailPage({ params }: PageProps<"/zlecenia/[id
         ) : null}
       </div>
 
-      <JobActions job={job} customers={customers} />
+      <JobActions job={job} customers={customers} sites={sites} />
 
       {/* Rozliczenie zlecenia */}
       <section className="mt-6">

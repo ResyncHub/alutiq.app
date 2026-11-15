@@ -55,9 +55,11 @@ export async function addJobAction(
       });
     }
 
+    const siteId = v.customerMode === "existing" ? v.siteId : null;
+
     const job = await createJob({
       customerId,
-      siteId: null,
+      siteId,
       title: v.title,
       notes: v.notes,
       phone: null,

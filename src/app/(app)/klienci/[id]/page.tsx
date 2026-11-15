@@ -41,6 +41,14 @@ export default async function CustomerDetailPage({
 
   const title = customer.name || customer.phone || "Klient bez nazwy";
 
+  // Lekka lista obiektów tego klienta do wyboru przy dodawaniu zlecenia —
+  // bez dodatkowego zapytania, `sites` już mamy z zapytania wyżej.
+  const siteOptions = sites.map((s) => ({
+    id: s.id,
+    customerId: customer.id,
+    label: siteTitle(s.label, s.address),
+  }));
+
   return (
     <>
       <Link
@@ -96,6 +104,7 @@ export default async function CustomerDetailPage({
           </h2>
           <JobQuickAdd
             customers={customerOptions}
+            sites={siteOptions}
             defaultCustomerId={customer.id}
             triggerLabel="Dodaj"
             variant="outline"

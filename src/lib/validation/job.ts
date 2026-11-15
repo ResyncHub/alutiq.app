@@ -72,6 +72,7 @@ export const addJobFormSchema = z
   .object({
     customerMode: z.enum(["new", "existing"]).default("new"),
     customerId: optionalUuid,
+    siteId: optionalUuid,
     newCustomerName: optionalText(200),
     newCustomerPhone: optionalText(40),
     title: optionalText(200),

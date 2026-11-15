@@ -4,6 +4,7 @@ import { EmptyState } from "@/components/ui/states";
 import { todayInWarsaw, warsawDayRangeUtc } from "@/lib/domain/dates";
 import { listJobsInRange } from "@/lib/db/jobs";
 import { listCustomerOptions } from "@/lib/db/customers";
+import { listSiteOptions } from "@/lib/db/sites";
 import { JobQuickAdd } from "./zlecenia/job-quick-add";
 import { JobListItem } from "./zlecenia/job-list-item";
 
@@ -11,9 +12,10 @@ export default async function TodayPage() {
   const today = todayInWarsaw();
   const { startUtc, endUtc } = warsawDayRangeUtc(today);
 
-  const [jobs, customers] = await Promise.all([
+  const [jobs, customers, sites] = await Promise.all([
     listJobsInRange(startUtc, endUtc),
     listCustomerOptions(),
+    listSiteOptions(),
   ]);
 
   const dateLabel = new Intl.DateTimeFormat("pl-PL", {
@@ -27,7 +29,7 @@ export default async function TodayPage() {
       <PageHeader
         title="Dziś"
         subtitle={dateLabel}
-        action={<JobQuickAdd customers={customers} />}
+        action={<JobQuickAdd customers={customers} sites={sites} />}
       />
 
       {jobs.length === 0 ? (

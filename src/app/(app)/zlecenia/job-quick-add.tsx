@@ -5,12 +5,14 @@ import { useRouter } from "next/navigation";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet } from "@/components/ui/sheet";
+import type { SiteOption } from "@/lib/db/sites";
 import { addJobAction } from "./actions";
 import { JobAddForm } from "./job-add-form";
 import type { CustomerOption } from "./job-form";
 
 export function JobQuickAdd({
   customers,
+  sites,
   defaultScheduledAt = "",
   defaultCustomerId,
   triggerLabel = "Dodaj zlecenie",
@@ -18,6 +20,7 @@ export function JobQuickAdd({
   className,
 }: {
   customers: CustomerOption[];
+  sites: SiteOption[];
   defaultScheduledAt?: string;
   defaultCustomerId?: string;
   triggerLabel?: string;
@@ -39,6 +42,7 @@ export function JobQuickAdd({
           defaultScheduledAt={defaultScheduledAt}
           defaultCustomerId={defaultCustomerId}
           customers={customers}
+          sites={sites}
           action={(values) => addJobAction(values)}
           onDone={() => {
             setOpen(false);

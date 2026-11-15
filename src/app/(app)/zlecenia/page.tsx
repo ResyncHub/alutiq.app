@@ -9,6 +9,7 @@ import {
 import { cn } from "@/lib/utils";
 import { getJobStatusCounts, listAllJobs } from "@/lib/db/jobs";
 import { listCustomerOptions } from "@/lib/db/customers";
+import { listSiteOptions } from "@/lib/db/sites";
 import { JobListItem } from "./job-list-item";
 import { JobQuickAdd } from "./job-quick-add";
 
@@ -21,10 +22,11 @@ export default async function JobsPage({ searchParams }: PageProps<"/zlecenia">)
   const raw = typeof params.status === "string" ? params.status : undefined;
   const status = isJobStatus(raw) ? raw : undefined;
 
-  const [counts, jobs, customers] = await Promise.all([
+  const [counts, jobs, customers, sites] = await Promise.all([
     getJobStatusCounts(),
     listAllJobs(status),
     listCustomerOptions(),
+    listSiteOptions(),
   ]);
 
   const tiles = [
@@ -41,7 +43,7 @@ export default async function JobsPage({ searchParams }: PageProps<"/zlecenia">)
       <PageHeader
         title="Zlecenia"
         subtitle="Wszystkie zlecenia i statystyki"
-        action={<JobQuickAdd customers={customers} />}
+        action={<JobQuickAdd customers={customers} sites={sites} />}
       />
 
       {/* Statystyki = zarazem filtr etapów */}

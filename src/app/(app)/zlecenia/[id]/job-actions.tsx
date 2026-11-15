@@ -10,6 +10,7 @@ import { DeleteButton } from "@/components/ui/delete-button";
 import { JOB_STATUSES, JOB_STATUS_LABELS } from "@/lib/domain/dictionaries";
 import { utcToWarsawLocalInput } from "@/lib/domain/dates";
 import type { JobDetail } from "@/lib/db/jobs";
+import type { SiteOption } from "@/lib/db/sites";
 import {
   deleteJobAction,
   setJobScheduleAction,
@@ -24,9 +25,11 @@ const selectClass =
 export function JobActions({
   job,
   customers,
+  sites,
 }: {
   job: JobDetail;
   customers: CustomerOption[];
+  sites: SiteOption[];
 }) {
   const router = useRouter();
   const [editOpen, setEditOpen] = useState(false);
@@ -147,6 +150,7 @@ export function JobActions({
               : "",
           }}
           customers={customers}
+          sites={sites}
           submitLabel="Zapisz zmiany"
           action={(values) => updateJobAction({ ...values, id: job.id })}
           onDone={() => {
