@@ -4,6 +4,7 @@ import type { Database } from "@/lib/supabase/database.types";
 import { warsawDateOf, warsawLocalToUtcIso } from "@/lib/domain/dates";
 import {
   createJobSchema,
+  updateJobAddressSchema,
   updateJobScheduleSchema,
   updateJobSchema,
   updateJobStatusSchema,
@@ -219,6 +220,24 @@ export async function updateJobStatus(input: unknown): Promise<Job> {
     .select("*")
     .single();
   if (error) throw new Error(`Nie udało się zmienić statusu: ${error.message}`);
+  return data;
+}
+
+/**
+ * Zapisuje sam adres (obiekt klienta albo wpisany ręcznie) — pozwala uzupełnić
+ * adres zlecenia dodanego „na szybko", bez otwierania pełnej edycji.
+ */
+export async function updateJobAddress(input: unknown): Promise<Job> {
+  const values = updateJobAddressSchema.parse(input);
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("job")
+    .update({ site_id: values.siteId, address: values.address })
+    .eq("id", values.id)
+    .is("deleted_at", null)
+    .select("*")
+    .single();
+  if (error) throw new Error(`Nie udało się zapisać adresu: ${error.message}`);
   return data;
 }
 

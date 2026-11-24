@@ -13,6 +13,7 @@ import type { JobDetail } from "@/lib/db/jobs";
 import type { SiteOption } from "@/lib/db/sites";
 import {
   deleteJobAction,
+  setJobAddressAction,
   setJobScheduleAction,
   setJobStatusAction,
   updateJobAction,
@@ -47,6 +48,18 @@ export function JobActions({
 
   const scheduleDirty = schedule !== scheduleSaved || scheduleUntil !== scheduleUntilSaved;
 
+  // Adres: obiekt klienta albo wpisany ręcznie — żeby dało się go uzupełnić
+  // na zleceniu dodanym „na szybko", bez otwierania pełnej edycji.
+  const [siteId, setSiteId] = useState(job.site_id ?? "");
+  const [siteIdSaved, setSiteIdSaved] = useState(job.site_id ?? "");
+  const [address, setAddress] = useState(job.address ?? "");
+  const [addressSaved, setAddressSaved] = useState(job.address ?? "");
+  const [addressPending, setAddressPending] = useState(false);
+  const [addressError, setAddressError] = useState<string | null>(null);
+
+  const addressDirty = siteId !== siteIdSaved || address !== addressSaved;
+  const customerSites = sites.filter((s) => s.customerId === job.customer_id);
+
   async function onStatusChange(next: string) {
     setStatusError(null);
     const prev = status;
@@ -71,6 +84,26 @@ export function JobActions({
     }
     setScheduleSaved(schedule);
     setScheduleUntilSaved(scheduleUntil);
+    router.refresh();
+  }
+
+  async function onAddressSave() {
+    setAddressError(null);
+    setAddressPending(true);
+    const res = await setJobAddressAction(job.id, job.customer_id, siteId, address);
+    setAddressPending(false);
+    if (!res.ok) {
+      setAddressError(res.error);
+      return;
+    }
+    // Adres wpisany ręcznie mógł zostać zapisany jako nowy obiekt klienta —
+    // dopasowujemy lokalny stan do tego, co faktycznie zapisał serwer.
+    const resolvedSiteId = res.data.siteId ?? "";
+    const resolvedAddress = resolvedSiteId ? "" : address;
+    setSiteId(resolvedSiteId);
+    setSiteIdSaved(resolvedSiteId);
+    setAddress(resolvedAddress);
+    setAddressSaved(resolvedAddress);
     router.refresh();
   }
 
@@ -148,6 +181,49 @@ export function JobActions({
       {scheduleError ? (
         <p className="text-sm text-danger" role="alert">
           {scheduleError}
+        </p>
+      ) : null}
+
+      <div className="flex items-end gap-2">
+        <label className="flex-1">
+          <span className="mb-1 block text-xs text-muted">Adres</span>
+          {customerSites.length > 0 ? (
+            <select
+              className={selectClass}
+              value={siteId}
+              onChange={(e) => setSiteId(e.target.value)}
+            >
+              <option value="">— wpisz adres ręcznie —</option>
+              {customerSites.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <TextInput
+              value={address}
+              onChange={(e) => setAddress(e.target.value)}
+              placeholder="np. ul. Słoneczna 12, Bielsko-Biała"
+            />
+          )}
+        </label>
+        {addressDirty ? (
+          <Button onClick={onAddressSave} disabled={addressPending} className="px-3">
+            {addressPending ? "Zapisywanie…" : "Zapisz"}
+          </Button>
+        ) : null}
+      </div>
+      {customerSites.length > 0 && !siteId ? (
+        <TextInput
+          value={address}
+          onChange={(e) => setAddress(e.target.value)}
+          placeholder="np. ul. Słoneczna 12, Bielsko-Biała"
+        />
+      ) : null}
+      {addressError ? (
+        <p className="text-sm text-danger" role="alert">
+          {addressError}
         </p>
       ) : null}
 

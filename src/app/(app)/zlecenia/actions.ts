@@ -9,6 +9,7 @@ import {
   createJob,
   softDeleteJob,
   updateJob,
+  updateJobAddress,
   updateJobNotes,
   updateJobSchedule,
   updateJobStatus,
@@ -141,6 +142,32 @@ export async function setJobScheduleAction(
     await updateJobSchedule({ id, scheduledAt, scheduledUntil });
     revalidateJobViews(id);
     return { ok: true, data: undefined };
+  } catch (e) {
+    return { ok: false, error: toMessage(e) };
+  }
+}
+
+/**
+ * Szybkie uzupełnienie/zmiana adresu zlecenia dodanego „na szybko"
+ * (bez wchodzenia w pełną edycję). Adres wpisany ręcznie dla klienta z bazy
+ * zapisuje się jako jego obiekt — tak samo jak przy pełnym formularzu.
+ */
+export async function setJobAddressAction(
+  id: string,
+  customerId: string | null,
+  siteId: string,
+  address: string,
+): Promise<ActionResult<{ siteId: string | null }>> {
+  try {
+    let resolvedSiteId: string | null = siteId || null;
+    let resolvedAddress: string | null = address.trim() || null;
+    if (!resolvedSiteId && customerId && resolvedAddress) {
+      resolvedSiteId = await findOrCreateSiteByAddress({ customerId, address: resolvedAddress });
+      resolvedAddress = null;
+    }
+    await updateJobAddress({ id, siteId: resolvedSiteId, address: resolvedAddress });
+    revalidateJobViews(id);
+    return { ok: true, data: { siteId: resolvedSiteId } };
   } catch (e) {
     return { ok: false, error: toMessage(e) };
   }

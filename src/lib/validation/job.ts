@@ -97,6 +97,17 @@ export const updateJobScheduleSchema = z
   .superRefine(scheduledRangeRule);
 
 /**
+ * Samo uzupełnienie/zmiana adresu (obiekt klienta albo wpisany ręcznie) —
+ * żeby dało się dodać adres do zlecenia dodanego „na szybko", bez otwierania
+ * pełnej edycji.
+ */
+export const updateJobAddressSchema = z.object({
+  id: z.string().uuid(),
+  siteId: optionalUuid,
+  address: optionalText(300),
+});
+
+/**
  * Formularz dodawania zlecenia z tworzeniem klienta „w locie".
  * Tryb „new": wpisujesz nowego klienta (imię/nazwa + telefon) — jeśli klient
  * o tym telefonie już istnieje, podpinamy istniejącego (bez duplikatu).
