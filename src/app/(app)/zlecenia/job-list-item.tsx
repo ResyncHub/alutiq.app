@@ -1,8 +1,18 @@
 import Link from "next/link";
 import { ChevronRight, Clock } from "lucide-react";
-import { formatTimePl } from "@/lib/domain/dates";
+import { formatTimePl, warsawDateOf } from "@/lib/domain/dates";
 import { JobStatusBadge } from "@/components/job-status-badge";
 import type { JobWithCustomer } from "@/lib/db/jobs";
+
+const shortDatePl = new Intl.DateTimeFormat("pl-PL", { day: "2-digit", month: "2-digit" });
+
+/** Dla zlecenia wielodniowego — krótka data końca („→ 18.08"), inaczej null. */
+function multiDayEndLabel(job: JobWithCustomer): string | null {
+  if (!job.scheduled_at || !job.scheduled_until) return null;
+  const startDate = warsawDateOf(new Date(job.scheduled_at));
+  if (job.scheduled_until <= startDate) return null;
+  return `→ ${shortDatePl.format(new Date(`${job.scheduled_until}T12:00:00Z`))}`;
+}
 
 /**
  * Formatuje adres obiektu (site) jako jeden czytelny string.
@@ -67,6 +77,9 @@ export function JobListItem({
           <span className="text-xs font-semibold">
             {formatTimePl(new Date(job.scheduled_at))}
           </span>
+          {multiDayEndLabel(job) ? (
+            <span className="text-[9px] text-muted">{multiDayEndLabel(job)}</span>
+          ) : null}
         </span>
       ) : null}
       <span className="min-w-0 flex-1">

@@ -64,14 +64,18 @@ export function MonthCalendar({
     today.startsWith(month) ? today : firstOfMonth,
   );
 
-  // Zlecenia pogrupowane po dniu (czas warszawski).
+  // Zlecenia pogrupowane po dniu (czas warszawski) — wielodniowe (scheduled_until)
+  // trafiają do każdego dnia swojego zakresu, nie tylko dnia rozpoczęcia.
   const byDay = new Map<string, JobWithCustomer[]>();
   for (const job of jobs) {
     if (!job.scheduled_at) continue;
-    const day = warsawDateOf(new Date(job.scheduled_at));
-    const list = byDay.get(day) ?? [];
-    list.push(job);
-    byDay.set(day, list);
+    const startDay = warsawDateOf(new Date(job.scheduled_at));
+    const endDay = job.scheduled_until && job.scheduled_until > startDay ? job.scheduled_until : startDay;
+    for (let day = startDay; day <= endDay; day = addDays(day, 1)) {
+      const list = byDay.get(day) ?? [];
+      list.push(job);
+      byDay.set(day, list);
+    }
   }
 
   // Dni siatki: od poniedziałku tygodnia z 1. dniem miesiąca do niedzieli ostatniego.

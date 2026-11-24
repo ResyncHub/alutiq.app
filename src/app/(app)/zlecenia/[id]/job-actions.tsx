@@ -37,10 +37,15 @@ export function JobActions({
   const [statusError, setStatusError] = useState<string | null>(null);
 
   const savedSchedule = job.scheduled_at ? utcToWarsawLocalInput(job.scheduled_at) : "";
+  const savedScheduleUntil = job.scheduled_until ?? "";
   const [schedule, setSchedule] = useState(savedSchedule);
   const [scheduleSaved, setScheduleSaved] = useState(savedSchedule);
+  const [scheduleUntil, setScheduleUntil] = useState(savedScheduleUntil);
+  const [scheduleUntilSaved, setScheduleUntilSaved] = useState(savedScheduleUntil);
   const [schedulePending, setSchedulePending] = useState(false);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
+
+  const scheduleDirty = schedule !== scheduleSaved || scheduleUntil !== scheduleUntilSaved;
 
   async function onStatusChange(next: string) {
     setStatusError(null);
@@ -58,13 +63,14 @@ export function JobActions({
   async function onScheduleSave() {
     setScheduleError(null);
     setSchedulePending(true);
-    const res = await setJobScheduleAction(job.id, schedule);
+    const res = await setJobScheduleAction(job.id, schedule, scheduleUntil || null);
     setSchedulePending(false);
     if (!res.ok) {
       setScheduleError(res.error);
       return;
     }
     setScheduleSaved(schedule);
+    setScheduleUntilSaved(scheduleUntil);
     router.refresh();
   }
 
@@ -118,15 +124,25 @@ export function JobActions({
             onChange={(e) => setSchedule(e.target.value)}
           />
         </label>
-        {schedule !== scheduleSaved ? (
+        <label className="w-28">
+          <span className="mb-1 block text-xs text-muted">Do dnia</span>
+          <TextInput
+            type="date"
+            value={scheduleUntil}
+            onChange={(e) => setScheduleUntil(e.target.value)}
+          />
+        </label>
+        {scheduleDirty ? (
           <Button onClick={onScheduleSave} disabled={schedulePending} className="px-3">
             {schedulePending ? "Zapisywanie…" : "Zapisz"}
           </Button>
         ) : null}
       </div>
-      {schedule !== scheduleSaved ? (
+      {scheduleDirty ? (
         <p className="-mt-1 text-xs text-muted">
-          {schedule ? "Nowy termin — zapisz, żeby przenieść zlecenie." : "Termin zostanie usunięty (bez terminu)."}
+          {schedule
+            ? "Nowy termin — zapisz, żeby przenieść zlecenie."
+            : "Termin zostanie usunięty (bez terminu)."}
         </p>
       ) : null}
       {scheduleError ? (
@@ -148,6 +164,7 @@ export function JobActions({
             scheduledAt: job.scheduled_at
               ? utcToWarsawLocalInput(job.scheduled_at)
               : "",
+            scheduledUntil: job.scheduled_until ?? "",
           }}
           customers={customers}
           sites={sites}

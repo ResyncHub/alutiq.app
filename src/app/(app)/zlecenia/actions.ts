@@ -131,13 +131,14 @@ export async function deleteJobAction(id: string): Promise<ActionResult> {
   }
 }
 
-/** Szybka zmiana terminu (bez wchodzenia w pełną edycję). */
+/** Szybka zmiana terminu (bez wchodzenia w pełną edycję); obsługuje też zakres dni. */
 export async function setJobScheduleAction(
   id: string,
   scheduledAt: string,
+  scheduledUntil: string | null = null,
 ): Promise<ActionResult> {
   try {
-    await updateJobSchedule({ id, scheduledAt });
+    await updateJobSchedule({ id, scheduledAt, scheduledUntil });
     revalidateJobViews(id);
     return { ok: true, data: undefined };
   } catch (e) {

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarClock, MapPin, Phone, User } from "lucide-react";
-import { formatDateTimePl } from "@/lib/domain/dates";
+import { formatDatePl, formatDateTimePl, warsawDateOf } from "@/lib/domain/dates";
 import { formatPln, sumGr } from "@/lib/domain/money";
 import { cn } from "@/lib/utils";
 import { getJob } from "@/lib/db/jobs";
@@ -17,6 +17,17 @@ import { PhotoSection } from "./photo-section";
 import { ExpenseItem } from "../../finanse/expense-item";
 import { PaymentItem } from "../../finanse/payment-item";
 import { ExpenseQuickAdd, PaymentQuickAdd } from "../../finanse/finance-quick-add";
+
+/** Dla zlecenia wielodniowego — „ – 18.08.2026" do dopisania po terminie, inaczej "". */
+function scheduledRangeSuffix(
+  scheduledAt: string | null,
+  scheduledUntil: string | null,
+): string {
+  if (!scheduledAt || !scheduledUntil) return "";
+  const startDate = warsawDateOf(new Date(scheduledAt));
+  if (scheduledUntil <= startDate) return "";
+  return ` – ${formatDatePl(new Date(`${scheduledUntil}T12:00:00Z`))}`;
+}
 
 export default async function JobDetailPage({ params }: PageProps<"/zlecenia/[id]">) {
   const { id } = await params;
@@ -56,7 +67,7 @@ export default async function JobDetailPage({ params }: PageProps<"/zlecenia/[id
           <CalendarClock className="size-4 shrink-0 text-muted" aria-hidden />
           <span className={job.scheduled_at ? "tabular" : "text-muted"}>
             {job.scheduled_at
-              ? formatDateTimePl(new Date(job.scheduled_at))
+              ? `${formatDateTimePl(new Date(job.scheduled_at))}${scheduledRangeSuffix(job.scheduled_at, job.scheduled_until)}`
               : "Bez terminu"}
           </span>
         </div>

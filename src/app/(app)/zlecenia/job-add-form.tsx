@@ -48,6 +48,7 @@ export function JobAddForm({
       address: "",
       status: "new",
       scheduledAt: defaultScheduledAt,
+      scheduledUntil: "",
     },
   });
   const [mode, selectedCustomerId, selectedSiteId] = useWatch({
@@ -152,13 +153,26 @@ export function JobAddForm({
         />
       </Field>
 
-      <Field
-        label="Termin"
-        error={errors.scheduledAt?.message}
-        hint="Zostaw puste, jeśli jeszcze nieumówione."
-      >
-        <TextInput type="datetime-local" {...form.register("scheduledAt")} />
-      </Field>
+      <div className="flex gap-3">
+        <div className="flex-1">
+          <Field
+            label="Termin"
+            error={errors.scheduledAt?.message}
+            hint="Zostaw puste, jeśli jeszcze nieumówione."
+          >
+            <TextInput type="datetime-local" {...form.register("scheduledAt")} />
+          </Field>
+        </div>
+        <div className="w-32">
+          <Field
+            label="Do dnia"
+            error={errors.scheduledUntil?.message}
+            hint="Dla zlecenia na kilka dni."
+          >
+            <TextInput type="date" {...form.register("scheduledUntil")} />
+          </Field>
+        </div>
+      </div>
 
       <Field label="Status" error={errors.status?.message}>
         <select className={selectClass} {...form.register("status")}>

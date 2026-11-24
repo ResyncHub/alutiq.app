@@ -2,6 +2,8 @@
 
 Jedna linia = jedna decyzja: data, decyzja, powód (CLAUDE.md §11).
 
+- **2026-08-14** — Zlecenie dostaje opcjonalną kolumnę `scheduled_until` (`date`, bez godziny) na zlecenia wielodniowe (np. montaż na 3 dni). To rozszerzenie decyzji „zlecenie = wizyta, jeden termin" z 2026-08-13, nie jej cofnięcie: nadal jeden rekord zlecenia, tylko z opcjonalnym „do kiedy". Zlecenie wielodniowe pojawia się w kalendarzu i na „Dziś" każdego dnia swojego zakresu (`listJobsInRange` dobiera zlecenia, których przedział nachodzi na żądane okno). CLAUDE.md §7 zaktualizowane.
+
 - **2026-08-14** — Ręcznie wpisany adres zlecenia dla klienta z bazy automatycznie staje się jego obiektem (`findOrCreateSiteByAddress`), zamiast zostać tylko wolnym tekstem na zleceniu. Powód: adresy wpisywane wcześniej (np. „Hotel Aries") nigdy nie trafiały do `site`, więc nie było ich do wyboru przy kolejnym zleceniu — użytkownik wpisywał ten sam adres za każdym razem. Migracja `20260814090000` jednorazowo odtworzyła obiekty z adresów już zapisanych w historycznych zleceniach (zleceń bez podpiętego klienta nie ruszono — nie ma do czego przypiąć obiektu).
 
 - **2026-08-13** — Scaffold na Next.js 16.3 (App Router) + React 19 + Tailwind v4 + TS strict. Powód: aktualne wersje zatwierdzonego stacku (§2).

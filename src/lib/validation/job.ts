@@ -1,6 +1,6 @@
 import { z } from "zod";
 import { JOB_STATUSES } from "@/lib/domain/dictionaries";
-import { optionalLocalDateTime, optionalText } from "./common";
+import { optionalDate, optionalLocalDateTime, optionalText } from "./common";
 
 /** Opcjonalny UUID: "" / null / brak -> null, w innym razie musi być UUID. */
 const optionalUuid = z
@@ -12,6 +12,33 @@ const optionalUuid = z
     message: "Nieprawidłowy identyfikator",
   });
 
+/**
+ * Zasada zakresu terminu: „do dnia" ma sens tylko razem z terminem rozpoczęcia
+ * i nie może być wcześniej niż on (zlecenie wielodniowe, np. montaż na 3 dni).
+ */
+const scheduledRangeRule = (
+  val: { scheduledAt: string | null; scheduledUntil: string | null },
+  ctx: z.RefinementCtx,
+) => {
+  if (!val.scheduledUntil) return;
+  if (!val.scheduledAt) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Podaj termin rozpoczęcia, żeby ustawić datę zakończenia.",
+      path: ["scheduledUntil"],
+    });
+    return;
+  }
+  const startDate = val.scheduledAt.slice(0, 10);
+  if (val.scheduledUntil < startDate) {
+    ctx.addIssue({
+      code: z.ZodIssueCode.custom,
+      message: "Data zakończenia nie może być wcześniejsza niż termin rozpoczęcia.",
+      path: ["scheduledUntil"],
+    });
+  }
+};
+
 const jobFieldsSchema = z.object({
   customerId: optionalUuid,
   siteId: optionalUuid,
@@ -21,6 +48,7 @@ const jobFieldsSchema = z.object({
   address: optionalText(300),
   status: z.enum(JOB_STATUSES).default("new"),
   scheduledAt: optionalLocalDateTime,
+  scheduledUntil: optionalDate,
 });
 
 /** Zasada minimum: zlecenie musi mieć cokolwiek do identyfikacji. */
@@ -42,12 +70,15 @@ const jobMinRule = (
   }
 };
 
-export const createJobSchema = jobFieldsSchema.superRefine(jobMinRule);
+export const createJobSchema = jobFieldsSchema
+  .superRefine(jobMinRule)
+  .superRefine(scheduledRangeRule);
 export type CreateJobValues = z.output<typeof createJobSchema>;
 
 export const updateJobSchema = jobFieldsSchema
   .extend({ id: z.string().uuid() })
-  .superRefine(jobMinRule);
+  .superRefine(jobMinRule)
+  .superRefine(scheduledRangeRule);
 export type UpdateJobValues = z.output<typeof updateJobSchema>;
 
 /** Sama zmiana statusu (szybka akcja na liście/szczegółach). */
@@ -56,11 +87,14 @@ export const updateJobStatusSchema = z.object({
   status: z.enum(JOB_STATUSES),
 });
 
-/** Sama zmiana terminu (szybkie przełożenie na inny dzień/godzinę). */
-export const updateJobScheduleSchema = z.object({
-  id: z.string().uuid(),
-  scheduledAt: optionalLocalDateTime,
-});
+/** Sama zmiana terminu (szybkie przełożenie na inny dzień/godzinę, w tym zakresu dni). */
+export const updateJobScheduleSchema = z
+  .object({
+    id: z.string().uuid(),
+    scheduledAt: optionalLocalDateTime,
+    scheduledUntil: optionalDate,
+  })
+  .superRefine(scheduledRangeRule);
 
 /**
  * Formularz dodawania zlecenia z tworzeniem klienta „w locie".
@@ -80,6 +114,7 @@ export const addJobFormSchema = z
     address: optionalText(300),
     status: z.enum(JOB_STATUSES).default("new"),
     scheduledAt: optionalLocalDateTime,
+    scheduledUntil: optionalDate,
   })
   .superRefine((val, ctx) => {
     const hasCustomer =
@@ -92,5 +127,6 @@ export const addJobFormSchema = z
         path: ["title"],
       });
     }
-  });
+  })
+  .superRefine(scheduledRangeRule);
 export type AddJobFormValues = z.output<typeof addJobFormSchema>;

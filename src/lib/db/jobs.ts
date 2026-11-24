@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient } from "@/lib/supabase/server";
 import type { Database } from "@/lib/supabase/database.types";
-import { warsawLocalToUtcIso } from "@/lib/domain/dates";
+import { warsawDateOf, warsawLocalToUtcIso } from "@/lib/domain/dates";
 import {
   createJobSchema,
   updateJobScheduleSchema,
@@ -32,19 +32,28 @@ export type JobDetail = Job & {
 const WITH_CUSTOMER =
   "*, customer:customer_id(id, name, phone), site:site_id(id, label, address, city, postal_code)";
 
-/** Zlecenia z terminem w danym zakresie chwil [startUtc, endUtc). */
+/**
+ * Zlecenia aktywne w danym zakresie chwil [startUtc, endUtc) — czyli takie,
+ * których przedział [scheduled_at .. scheduled_until] (dla jednodniowych:
+ * sam dzień scheduled_at) nachodzi na to okno. Zlecenie wielodniowe (montaż
+ * na kilka dni) pojawia się więc w każdym dniu swojego zakresu, nie tylko
+ * w dniu rozpoczęcia.
+ */
 export async function listJobsInRange(
   startUtc: Date,
   endUtc: Date,
 ): Promise<JobWithCustomer[]> {
   const supabase = await createClient();
+  const fromDate = warsawDateOf(startUtc);
   const { data, error } = await supabase
     .from("job")
     .select(WITH_CUSTOMER)
     .is("deleted_at", null)
     .not("scheduled_at", "is", null)
-    .gte("scheduled_at", startUtc.toISOString())
     .lt("scheduled_at", endUtc.toISOString())
+    .or(
+      `and(scheduled_until.is.null,scheduled_at.gte.${startUtc.toISOString()}),and(scheduled_until.gte.${fromDate})`,
+    )
     .order("scheduled_at", { ascending: true })
     .returns<JobWithCustomer[]>();
   if (error) throw new Error(`Nie udało się pobrać zleceń: ${error.message}`);
@@ -165,6 +174,7 @@ export async function createJob(input: unknown): Promise<Job> {
       address: values.address,
       status: values.status,
       scheduled_at: toScheduledIso(values.scheduledAt),
+      scheduled_until: values.scheduledUntil,
     })
     .select("*")
     .single();
@@ -187,6 +197,7 @@ export async function updateJob(input: unknown): Promise<Job> {
       address: values.address,
       status: values.status,
       scheduled_at: toScheduledIso(values.scheduledAt),
+      scheduled_until: values.scheduledUntil,
     })
     .eq("id", values.id)
     .is("deleted_at", null)
@@ -222,13 +233,19 @@ export async function updateJobNotes(id: string, notes: string | null): Promise<
   if (error) throw new Error(`Nie udało się zapisać notatki: ${error.message}`);
 }
 
-/** Zmienia sam termin zlecenia (szybkie przełożenie, np. gdy dojadą części). */
+/**
+ * Zmienia termin zlecenia (szybkie przełożenie, np. gdy dojadą części) —
+ * razem z datą zakończenia dla zleceń wielodniowych.
+ */
 export async function updateJobSchedule(input: unknown): Promise<Job> {
   const values = updateJobScheduleSchema.parse(input);
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("job")
-    .update({ scheduled_at: toScheduledIso(values.scheduledAt) })
+    .update({
+      scheduled_at: toScheduledIso(values.scheduledAt),
+      scheduled_until: values.scheduledUntil,
+    })
     .eq("id", values.id)
     .is("deleted_at", null)
     .select("*")

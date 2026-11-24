@@ -131,9 +131,12 @@ Tu błąd kosztuje realne pieniądze, więc reguły są sztywne:
 - Strefa prezentacji zawsze `Europe/Warsaw`. Nie polegaj na strefie przeglądarki.
 - „Dziś" i granice tygodnia/miesiąca liczy jedna funkcja z `src/lib/domain/dates.ts`.
   Zmiana czasu i tydzień zaczynający się w poniedziałek to typowe miejsca na błąd.
-- Zlecenie ma termin `scheduled_at` (data + godzina, na którą serwisant się umówił);
-  bez `ends_at`. Kilka zleceń na ten sam dzień/godzinę pokazuj informacyjnie,
-  nie blokuj zapisu — realny serwis bywa chaotyczny.
+- Zlecenie ma termin `scheduled_at` (data + godzina, na którą serwisant się umówił)
+  i opcjonalny `scheduled_until` (`date`, bez godziny) dla zleceń wielodniowych
+  (np. montaż na kilka dni) — wtedy zlecenie jest widoczne w kalendarzu każdego dnia
+  w tym zakresie. Nadal jedno zlecenie = jeden rekord (decyzja 2026-08-13).
+  Kilka zleceń na ten sam dzień/godzinę pokazuj informacyjnie, nie blokuj zapisu
+  — realny serwis bywa chaotyczny.
 
 ---
 
